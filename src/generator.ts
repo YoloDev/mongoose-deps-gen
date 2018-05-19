@@ -32,19 +32,31 @@ type Config = {
   version: number;
 };
 
-export async function maybeUpdateIncludes() {
+export async function maybeUpdateIncludes(
+  channel: vscode.OutputChannel,
+  showMessage: boolean,
+) {
+  channel.appendLine('Starting include paths update...');
   const mosConfigs = await vscode.workspace.findFiles('mos.yml');
 
-  await Promise.all(mosConfigs.map(maybeupdateIncludeForProject));
-  console.log('[mos] C++ includes updated');
+  await Promise.all(mosConfigs.map(maybeupdateIncludeForProject(channel)));
+  channel.appendLine('All include paths updated');
+  if (showMessage) {
+    vscode.window.showInformationMessage(
+      'Mongoose OS: C/C++ include paths updated',
+    );
+  }
 }
 
-async function maybeupdateIncludeForProject(uri: vscode.Uri) {
+const maybeupdateIncludeForProject = (channel: vscode.OutputChannel) => async (
+  uri: vscode.Uri,
+) => {
   const workspace = await vscode.workspace.getWorkspaceFolder(uri);
   if (!workspace) {
     return;
   }
 
+  channel.appendLine(`Starting update for workspace: ${workspace.uri.fsPath}`);
   const gccSearchPath = await getGccSearchPaths();
   const mosModulePaths = await getMosModulePaths(workspace);
   const propsFile = await getPropsFile(workspace);
@@ -69,7 +81,8 @@ async function maybeupdateIncludeForProject(uri: vscode.Uri) {
   }
 
   await savePropsFile(workspace, propsFile);
-}
+  channel.appendLine(`Finished update for workspace: ${workspace.uri.fsPath}`);
+};
 
 async function getPropsFile(
   workspace: vscode.WorkspaceFolder,

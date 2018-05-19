@@ -11,24 +11,23 @@ export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log('mongoose-deps-gen activated');
+  const channel = vscode.window.createOutputChannel('mos-deps-gen');
 
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with  registerCommand
   // The commandId parameter must match the command field in package.json
   context.subscriptions.push(
     vscode.commands.registerCommand('mos-dep-gen.generate', () => {
-      // The code you place here will be executed every time your command is executed
-
-      // Display a message box to the user
-      vscode.window.showInformationMessage('I do updates now...');
+      channel.appendLine('Workspace changed');
+      maybeUpdateIncludes(channel, true);
     }),
   );
 
   // Get notified whenever the workspace folders change
   context.subscriptions.push(
     vscode.workspace.onDidChangeWorkspaceFolders(e => {
-      console.log('Workspace changed');
-      maybeUpdateIncludes();
+      channel.appendLine('Workspace changed');
+      maybeUpdateIncludes(channel, false);
     }),
   );
 
@@ -41,19 +40,19 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(watcher);
   context.subscriptions.push(
     watcher.onDidChange(e => {
-      console.log('Mos config changed');
-      maybeUpdateIncludes();
+      channel.appendLine('Mos config changed');
+      maybeUpdateIncludes(channel, false);
     }),
   );
 
   context.subscriptions.push(
     watcher.onDidCreate(e => {
-      console.log('Mos config changed');
-      maybeUpdateIncludes();
+      channel.appendLine('Mos config changed');
+      maybeUpdateIncludes(channel, false);
     }),
   );
 
-  maybeUpdateIncludes();
+  maybeUpdateIncludes(channel, false);
 }
 
 // this method is called when your extension is deactivated
