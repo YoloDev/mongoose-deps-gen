@@ -3,7 +3,7 @@
   "displayName": "mongoose-deps-gen",
   "description":
     "Generate and keep up to date Mongoose include paths for C/C++",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "yolodev",
   "engines": {
     "vscode": "^1.23.0"
