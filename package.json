@@ -3,7 +3,7 @@
   "displayName": "Mongoose OS Dependency Generator",
   "description":
     "Generate and keep up to date Mongoose include paths for C/C++",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "alxandr",
   "engines": {
     "vscode": "^1.23.0"

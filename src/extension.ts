@@ -4,6 +4,47 @@ import * as vscode from 'vscode';
 
 import { maybeUpdateIncludes } from './generator';
 
+const workspaceWatchers = new Map<string, vscode.FileSystemWatcher>();
+
+const addWatcher = (
+  channel: vscode.OutputChannel,
+  workspace: vscode.WorkspaceFolder,
+) => {
+  const watcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(workspace, 'mos.yml'),
+    false,
+    false,
+    true,
+  );
+  channel.appendLine(
+    `Added file watcher to workspace: ${workspace.uri.fsPath}`,
+  );
+  workspaceWatchers.set(workspace.uri.fsPath, watcher);
+
+  watcher.onDidChange(e => {
+    channel.appendLine('Mos config changed');
+    maybeUpdateIncludes(channel, false);
+  });
+
+  watcher.onDidCreate(e => {
+    channel.appendLine('Mos config changed');
+    maybeUpdateIncludes(channel, false);
+  });
+};
+
+const removeWatcher = (
+  channel: vscode.OutputChannel,
+  workspace: vscode.WorkspaceFolder,
+) => {
+  const watcher = workspaceWatchers.get(workspace.uri.fsPath);
+  if (watcher) {
+    watcher.dispose();
+    channel.appendLine(
+      `Removed file watcher to workspace: ${workspace.uri.fsPath}`,
+    );
+  }
+};
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 // or when a folder containing a mos.yml is opened.
@@ -27,30 +68,24 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidChangeWorkspaceFolders(e => {
       channel.appendLine('Workspace changed');
+      for (const workspace of e.removed) {
+        removeWatcher(channel, workspace);
+      }
+
+      for (const workspace of e.added) {
+        addWatcher(channel, workspace);
+      }
+
       maybeUpdateIncludes(channel, false);
     }),
   );
 
-  const watcher = vscode.workspace.createFileSystemWatcher(
-    'mos.yml',
-    true,
-    true,
-    false,
-  );
-  context.subscriptions.push(watcher);
-  context.subscriptions.push(
-    watcher.onDidChange(e => {
-      channel.appendLine('Mos config changed');
-      maybeUpdateIncludes(channel, false);
-    }),
-  );
-
-  context.subscriptions.push(
-    watcher.onDidCreate(e => {
-      channel.appendLine('Mos config changed');
-      maybeUpdateIncludes(channel, false);
-    }),
-  );
+  const workspaces = vscode.workspace.workspaceFolders;
+  if (workspaces) {
+    for (const workspace of workspaces) {
+      addWatcher(channel, workspace);
+    }
+  }
 
   maybeUpdateIncludes(channel, false);
 }
