@@ -16,13 +16,17 @@ const memoizeAsync = <T>(asyncFn: () => Promise<T>) => {
 };
 
 const verboseGcc = memoizeAsync(async () => {
-  const proc = execa('gcc', ['-xc++', '-E', '-v', '-'], {
-    stdin: 'pipe',
-  });
-  proc.stdin.end();
-  const { stderr } = await proc;
+  try {
+    const proc = execa('gcc', ['-xc++', '-E', '-v', '-'], {
+      stdin: 'pipe',
+    });
+    proc.stdin.end();
+    const { stderr } = await proc;
 
-  return stderr;
+    return stderr;
+  } catch (e) {
+    return ""; // No gcc or failure in execution 
+  }
 });
 
 const parseGcc = (output: string) => {

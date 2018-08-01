@@ -75,9 +75,9 @@ const maybeupdateIncludeForProject = (channel: vscode.OutputChannel) => async (
       ...mosModulePaths /*.map(relativeTo(workspace))*/,
     ].map(path.normalize);
 
-    platformConfig.defines = [...mosDefines];
-    platformConfig.browse.path = [...platformIncludes];
-    platformConfig.includePath = [...platformIncludes];
+    platformConfig.defines = [...mosDefines, "${default}"];
+    platformConfig.browse.path = [...platformIncludes, "${default}"];
+    platformConfig.includePath = [...platformIncludes, "${default}"];
   }
 
   await savePropsFile(workspace, propsFile);
